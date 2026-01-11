@@ -4,12 +4,13 @@ WORKDIR /app
 
 COPY . .
 
-# Make mvnw executable for Linux
+# Make mvnw executable
 RUN chmod +x mvnw
 
-# Build the project
+# Build project without tests
 RUN ./mvnw clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/*.jar"]
+# Run the jar
+CMD ["sh", "-c", "java -jar target/*.jar"]
