@@ -1,5 +1,6 @@
 package healthcare_backend.com.example.demo.controller;
 
+import healthcare_backend.com.example.demo.annotation.RequireRole;
 import healthcare_backend.com.example.demo.model.Patient;
 import healthcare_backend.com.example.demo.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,27 +12,26 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/patients") // plural is more RESTful
-//@CrossOrigin(origins = "*")
+@RequestMapping("/api/patients")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PatientController {
 
     @Autowired
     private PatientRepository patientRepository;
 
-    // POST - Create a new patient
     @PostMapping
+    @RequireRole({"PATIENT", "ADMIN"})
     public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
         try {
             Patient savedPatient = patientRepository.save(patient);
             return new ResponseEntity<>(savedPatient, HttpStatus.CREATED);
         } catch (Exception e) {
-            // log the exception in real apps
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // GET - Get all patients
     @GetMapping
+    @RequireRole({"DOCTOR", "ADMIN"})
     public ResponseEntity<List<Patient>> getAllPatients() {
         try {
             List<Patient> patients = patientRepository.findAll();
@@ -40,13 +40,12 @@ public class PatientController {
             }
             return new ResponseEntity<>(patients, HttpStatus.OK);
         } catch (Exception e) {
-            // log the exception in real apps
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // GET - Get patient by ID
     @GetMapping("/{id}")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
     public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
         Optional<Patient> patientData = patientRepository.findById(id);
 
@@ -55,16 +54,15 @@ public class PatientController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // PUT - Update patient by ID
     @PutMapping("/{id}")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
     public ResponseEntity<Patient> updatePatient(@PathVariable Long id, @RequestBody Patient patient) {
         Optional<Patient> patientData = patientRepository.findById(id);
 
         if (patientData.isPresent()) {
             Patient existingPatient = patientData.get();
-            // Make sure your Patient entity has these getters/setters: getAddress(), setAddress()
             existingPatient.setName(patient.getName());
-            existingPatient.setAddress(patient.getAddress()); // fixed getaddress() -> getAddress()
+            existingPatient.setAddress(patient.getAddress());
             existingPatient.setDisease(patient.getDisease());
 
             Patient updatedPatient = patientRepository.save(existingPatient);
@@ -74,8 +72,8 @@ public class PatientController {
         }
     }
 
-    // DELETE - Delete patient by ID
     @DeleteMapping("/{id}")
+    @RequireRole({"ADMIN"})
     public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
         try {
             if (!patientRepository.existsById(id)) {
@@ -84,19 +82,17 @@ public class PatientController {
             patientRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            // log the exception in real apps
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // DELETE - Delete all patients
     @DeleteMapping
+    @RequireRole({"ADMIN"})
     public ResponseEntity<Void> deleteAllPatients() {
         try {
             patientRepository.deleteAll();
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            // log the exception in real apps
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
