@@ -1,0 +1,11 @@
+{
+  "builds": [
+    {
+      "src": "healthcare-frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "healthcare-frontend/build"
+      }
+    }
+  ]
+}
