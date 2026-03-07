@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph "User Authentication"
+        direction TB
+        A[Start] --> B{Choose Action};
+        B -->|Register| C[Enter Registration Details];
+        B -->|Login| D[Enter Credentials];
+
+        C --> E{Valid Details?};
+        E -->|No| C;
+        E -->|Yes| F[Check if Email Exists];
+        F --> G{Email Exists?};
+        G -->|Yes| H[Display 'Email already exists' Error];
+        G -->|No| I[Save User to Database];
+        I --> J{Role is DOCTOR?};
+        J -->|Yes| K[Create Doctor Profile];
+        J -->|No| L[End];
+        K --> L;
+        I --> M[Display 'Registration Successful'];
+        M --> L;
+        H --> L;
+
+        D --> N[Find User by Email];
+        N --> O{User Exists?};
+        O -->|No| P[Display 'Invalid Credentials' Error];
+        O -->|Yes| Q{Password Matches?};
+        Q -->|No| P;
+        Q -->|Yes| R[Generate Auth Token];
+        R --> S{Role is DOCTOR?};
+        S -->|Yes| T[Fetch Doctor ID];
+        S -->|No| U[End];
+        T --> U;
+        R --> V[Return Token & User Data];
+        V --> U;
+        P --> U;
+    end

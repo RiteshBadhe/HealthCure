@@ -3,11 +3,14 @@ package healthcare_backend.com.example.demo.controller;
 import healthcare_backend.com.example.demo.annotation.RequireRole;
 import healthcare_backend.com.example.demo.model.Doctor;
 import healthcare_backend.com.example.demo.repository.DoctorRepository;
+import healthcare_backend.com.example.demo.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -17,6 +20,40 @@ public class DoctorController {
 
     @Autowired
     private DoctorRepository doctorRepository;
+
+    @Autowired
+    private AppointmentService appointmentService;
+
+    // ✅ UPDATE DOCTOR AVAILABILITY — triggers emergency patient notifications
+    @PatchMapping("/{id}/availability")
+    @RequireRole({"DOCTOR", "ADMIN"})
+    public ResponseEntity<Map<String, Object>> updateAvailability(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Doctor doctor = doctorRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found"));
+            boolean available = Boolean.TRUE.equals(request.get("available"));
+            doctor.setAvailable(available);
+            doctorRepository.save(doctor);
+
+            if (available) {
+                // Notify all emergency/high-priority pending patients
+                appointmentService.checkDoctorAvailabilityAndNotifyPatients(id);
+                response.put("message", "Doctor marked as available. Emergency patients have been notified.");
+            } else {
+                response.put("message", "Doctor marked as unavailable.");
+            }
+            response.put("available", available);
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 
     @GetMapping
     @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})

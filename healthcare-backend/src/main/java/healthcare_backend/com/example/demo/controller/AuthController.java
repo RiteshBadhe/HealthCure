@@ -79,6 +79,7 @@ public class AuthController {
                 response.put("role", user.getRole());
                 response.put("userId", user.getId());
                 response.put("email", user.getEmail());
+                response.put("name", user.getName());
                 response.put("message", "Login successful");
                 
                 // If user is a DOCTOR, also fetch and return their Doctor ID

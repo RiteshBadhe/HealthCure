@@ -11,6 +11,21 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    public void sendEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("healthcare.system@example.com");
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("✅ Email sent successfully to: " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public void sendSOSEmail(String toEmail, String userName, double latitude, double longitude, String googleMapsLink) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();

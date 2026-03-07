@@ -52,6 +52,9 @@ public class Appointment {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "priority")
+    private Integer priority = 0;
+
     // ✅ DEFAULT CONSTRUCTOR (REQUIRED)
     public Appointment() {}
 
@@ -67,6 +70,7 @@ public class Appointment {
     public String getDoctorName() { return doctorName; }
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Integer getPriority() { return priority; }
 
     // ✅ ALL SETTERS
     public void setId(Long id) { this.id = id; }
@@ -80,4 +84,5 @@ public class Appointment {
     public void setDoctorName(String doctorName) { this.doctorName = doctorName; }
     public void setStatus(String status) { this.status = status; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setPriority(Integer priority) { this.priority = priority; }
 }

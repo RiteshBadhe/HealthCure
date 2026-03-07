@@ -1,0 +1,19 @@
+flowchart TD
+    subgraph "Medical Record Creation"
+        direction TB
+        A[Start] --> B[Doctor/Admin Submits New Medical Record Form];
+        B --> C{User Role Authorized?};
+        C -->|No| D[Return 403 Forbidden Error];
+        C -->|Yes| E{Validate Record Data};
+        E -->|Invalid| F[Show Validation Error];
+        E -->|Valid| G[Save Medical Record to Database];
+        
+        G --> H{Save Successful?};
+        H -->|No| I[Return Server Error];
+        H -->|Yes| J[Return Created Record Data];
+        
+        J --> K[End];
+        D --> K;
+        F --> K;
+        I --> K;
+    end

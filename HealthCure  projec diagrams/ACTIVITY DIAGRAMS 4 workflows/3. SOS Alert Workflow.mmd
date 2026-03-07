@@ -1,0 +1,21 @@
+flowchart TD
+    subgraph "SOS Alert Handling"
+        direction TB
+        A[Start] --> B[User Triggers SOS Alert with Location];
+        B --> C[Save SOS Alert to Database];
+        
+        C --> D{Save Successful?};
+        D -->|No| E[Display 'Failed to send SOS' Error];
+        D -->|Yes| F[Create 'SOS Sent' Notification for User];
+        
+        F --> G[Save Notification to Database];
+        
+        G --> H{Emergency Contact Provided?};
+        H -->|Yes| I[Send Email to Emergency Contact];
+        H -->|No| J[Send Email to User's Own Address];
+        I --> J;
+        
+        J --> K[Return Success Message & Maps Link];
+        K --> L[End];
+        E --> L;
+    end

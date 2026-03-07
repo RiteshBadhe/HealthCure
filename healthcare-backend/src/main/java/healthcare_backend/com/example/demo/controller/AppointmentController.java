@@ -4,6 +4,7 @@ import healthcare_backend.com.example.demo.model.Appointment;
 import healthcare_backend.com.example.demo.model.Notification;
 import healthcare_backend.com.example.demo.repository.AppointmentRepository;
 import healthcare_backend.com.example.demo.repository.NotificationRepository;
+import healthcare_backend.com.example.demo.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,35 +20,48 @@ public class AppointmentController {
 
     @Autowired
     private AppointmentRepository appointmentRepository;
-    
+
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     // ✅ CREATE APPOINTMENT
 @PostMapping("/appointments")
-    public ResponseEntity<Map<String, Object>> createAppointment(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> createAppointment(@RequestBody Map<String, Object> request) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
             Appointment appointment = new Appointment();
 
-            appointment.setPatientName(request.get("patientName"));
-            appointment.setPatientEmail(request.get("patientEmail"));
-            appointment.setPatientPhone(request.get("patientPhone"));
-            appointment.setAppointmentDate(request.get("appointmentDate"));
-            appointment.setAppointmentTime(request.get("appointmentTime"));
-            appointment.setReason(request.get("reason") != null ? request.get("reason") : "");
-            appointment.setDoctorId(request.get("doctorId"));
-            appointment.setDoctorName(request.get("doctorName"));
+            appointment.setPatientName((String) request.get("patientName"));
+            appointment.setPatientEmail((String) request.get("patientEmail"));
+            appointment.setPatientPhone((String) request.get("patientPhone"));
+            appointment.setAppointmentDate((String) request.get("appointmentDate"));
+            appointment.setAppointmentTime((String) request.get("appointmentTime"));
+            appointment.setReason(request.get("reason") != null ? (String) request.get("reason") : "");
+            appointment.setDoctorId((String) request.get("doctorId"));
+            appointment.setDoctorName((String) request.get("doctorName"));
             appointment.setStatus("pending");
+
+            // 🚨 Priority: 1 = Emergency, 0 = Normal
+            if (request.get("priority") != null) {
+                appointment.setPriority(Integer.parseInt(request.get("priority").toString()));
+            } else {
+                appointment.setPriority(0);
+            }
 
             Appointment saved = appointmentRepository.save(appointment);
             
             // 🔔 CREATE NOTIFICATION FOR PATIENT
             try {
                 Notification patientNotification = new Notification();
-                patientNotification.setUserId(1L); // You should get actual userId from request
+                // Use userId sent from frontend (0 if not provided — queries use email anyway)
+                Object rawUserId = request.get("userId");
+                Long notifUserId = (rawUserId != null) ? Long.parseLong(rawUserId.toString()) : 0L;
+                patientNotification.setUserId(notifUserId);
                 patientNotification.setUserEmail(appointment.getPatientEmail());
                 patientNotification.setTitle("Appointment Booked");
                 patientNotification.setMessage(
@@ -61,6 +75,24 @@ public class AppointmentController {
                 notificationRepository.save(patientNotification);
             } catch (Exception e) {
                 System.err.println("Failed to create notification: " + e.getMessage());
+            }
+
+            // 📧 SEND BOOKING CONFIRMATION EMAIL
+            try {
+                String subject = "✅ Appointment Confirmed — " + saved.getDoctorName();
+                String body = "Dear " + saved.getPatientName() + ",\n\n"
+                        + "Your appointment has been successfully booked!\n\n"
+                        + "📅 Details:\n"
+                        + "   Doctor  : " + saved.getDoctorName() + "\n"
+                        + "   Date    : " + saved.getAppointmentDate() + "\n"
+                        + "   Time    : " + saved.getAppointmentTime() + "\n"
+                        + "   Reason  : " + (saved.getReason().isBlank() ? "—" : saved.getReason()) + "\n\n"
+                        + "You will receive another email with a live location-sharing link\n"
+                        + "approximately 30 minutes before your appointment.\n\n"
+                        + "— HealthCare Team";
+                emailService.sendEmail(saved.getPatientEmail(), subject, body);
+            } catch (Exception e) {
+                System.err.println("Failed to send booking confirmation email: " + e.getMessage());
             }
 
             response.put("success", true);

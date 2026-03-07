@@ -114,4 +114,39 @@ public class NotificationController {
         notificationRepository.deleteAll(notifications);
         return ResponseEntity.noContent().build();
     }
+
+    // ── Email-based endpoints (used so notifications work for ALL patients) ──
+
+    @GetMapping("/email/{email}")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
+    public ResponseEntity<List<Notification>> getByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(notificationRepository.findByUserEmailOrderByCreatedAtDesc(email));
+    }
+
+    @GetMapping("/email/{email}/unread")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
+    public ResponseEntity<List<Notification>> getUnreadByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(notificationRepository.findByUserEmailAndIsReadFalseOrderByCreatedAtDesc(email));
+    }
+
+    @GetMapping("/email/{email}/unread-count")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
+    public ResponseEntity<Map<String, Long>> getUnreadCountByEmail(@PathVariable String email) {
+        Long count = notificationRepository.countByUserEmailAndIsReadFalse(email);
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/email/{email}/read-all")
+    @RequireRole({"PATIENT", "DOCTOR", "ADMIN"})
+    public ResponseEntity<Map<String, String>> markAllAsReadByEmail(@PathVariable String email) {
+        List<Notification> unread = notificationRepository.findByUserEmailAndIsReadFalse(email);
+        for (Notification n : unread) { n.setIsRead(true); }
+        notificationRepository.saveAll(unread);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "All notifications marked as read");
+        response.put("count", String.valueOf(unread.size()));
+        return ResponseEntity.ok(response);
+    }
 }

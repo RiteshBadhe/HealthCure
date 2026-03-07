@@ -26,4 +26,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     
     // Count unread notifications
     Long countByUserIdAndIsReadFalse(Long userId);
+
+    // ── Email-based queries (used so notifications work for ALL patients) ──
+    List<Notification> findByUserEmailOrderByCreatedAtDesc(String userEmail);
+    List<Notification> findByUserEmailAndIsReadFalseOrderByCreatedAtDesc(String userEmail);
+    List<Notification> findByUserEmailAndIsReadFalse(String userEmail);
+    Long countByUserEmailAndIsReadFalse(String userEmail);
 }

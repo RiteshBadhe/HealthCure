@@ -15,6 +15,8 @@ public class Doctor {
     private String specialization;
     private String email;
     private String phone;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean available;
 
     // Default constructor
     public Doctor() {}
@@ -34,6 +36,7 @@ public class Doctor {
     public String getSpecialization() { return specialization; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
+    public boolean isAvailable() { return available; }
 
     // ✅ ALL SETTERS (JPA NEEDS THESE!)
     public void setId(Long id) { this.id = id; }
@@ -42,4 +45,5 @@ public class Doctor {
     public void setSpecialization(String specialization) { this.specialization = specialization; }
     public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
+    public void setAvailable(boolean available) { this.available = available; }
 }

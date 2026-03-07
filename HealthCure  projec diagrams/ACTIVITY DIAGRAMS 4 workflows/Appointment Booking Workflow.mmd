@@ -1,0 +1,18 @@
+flowchart TD
+    subgraph "Appointment Booking"
+        direction TB
+        A[Start] --> B[Patient Submits Appointment Form];
+        B --> C{Validate Input Data};
+        C -->|Invalid| D[Show Validation Error];
+        C -->|Valid| E[Save Appointment to Database];
+        
+        E --> F{Save Successful?};
+        F -->|No| G[Return Booking Error to User];
+        F -->|Yes| H[Create 'Appointment Booked' Notification];
+        
+        H --> I[Save Notification to Database];
+        I --> J[Return Success Message to User];
+        J --> K[End];
+        D --> K;
+        G --> K;
+    end
